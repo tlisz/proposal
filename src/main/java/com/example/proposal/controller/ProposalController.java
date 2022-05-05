@@ -1,12 +1,13 @@
 package com.example.proposal.controller;
 
 import com.example.proposal.dto.ProposalDTO;
+import com.example.proposal.dto.ProposalPageableRequest;
+import com.example.proposal.dto.ProposalPageableResult;
 import com.example.proposal.service.ProposalService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.util.List;
 
 @RestController
@@ -16,8 +17,8 @@ public class ProposalController {
 
     private final ProposalService proposalService;
 
-    @GetMapping
-    public List<ProposalDTO> getProposals() {
-        return proposalService.getProposals();
+    @PostMapping
+    public ProposalPageableResult getProposals(@Valid @RequestBody ProposalPageableRequest request) {
+        return proposalService.getProposals(request);
     }
 }
