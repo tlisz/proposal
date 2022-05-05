@@ -5,5 +5,6 @@ public enum State {
     VERIFIED,
     DELETED,
     REJECTED,
-    ACCEPTED
+    ACCEPTED,
+    PUBLISHED
 }
