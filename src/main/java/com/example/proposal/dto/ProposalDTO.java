@@ -21,6 +21,5 @@ public class ProposalDTO {
     private String reason;
 
     @NotNull
-    @NotEmpty
     private State state;
 }

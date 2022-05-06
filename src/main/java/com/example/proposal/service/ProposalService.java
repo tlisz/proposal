@@ -4,8 +4,8 @@ import com.example.proposal.dto.ProposalDTO;
 import com.example.proposal.dto.ProposalPageableRequest;
 import com.example.proposal.dto.ProposalPageableResult;
 
-import java.util.List;
-
 public interface ProposalService {
     ProposalPageableResult getProposals(ProposalPageableRequest request);
+    ProposalDTO createProposal(ProposalDTO newProposal);
+    ProposalDTO updateProposal(ProposalDTO proposalToUpdate);
 }

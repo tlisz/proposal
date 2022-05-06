@@ -8,7 +8,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import java.util.List;
 
 @RestController
 @RequestMapping("proposal")
@@ -17,8 +16,18 @@ public class ProposalController {
 
     private final ProposalService proposalService;
 
-    @PostMapping
+    @PostMapping("sorted")
     public ProposalPageableResult getProposals(@Valid @RequestBody ProposalPageableRequest request) {
         return proposalService.getProposals(request);
+    }
+
+    @PostMapping
+    public ProposalDTO createProposal(@Valid @RequestBody ProposalDTO newProposal) {
+        return proposalService.createProposal(newProposal);
+    }
+
+    @PutMapping
+    public  ProposalDTO updateProposal(@Valid @RequestBody ProposalDTO newProposal) {
+        return proposalService.updateProposal(newProposal);
     }
 }
