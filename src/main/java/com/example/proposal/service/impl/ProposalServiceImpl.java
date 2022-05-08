@@ -7,7 +7,9 @@ import com.example.proposal.enums.State;
 import com.example.proposal.exception.ProposalRequestException;
 import com.example.proposal.mapper.ProposalMapper;
 import com.example.proposal.model.ProposalEntity;
+import com.example.proposal.model.StateChangeHistoryEntity;
 import com.example.proposal.repository.ProposalRepository;
+import com.example.proposal.repository.StateChangeHistoryRepository;
 import com.example.proposal.service.ProposalService;
 import com.example.proposal.validator.UpdateValidatorUtil;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +19,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import javax.transaction.Transactional;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -28,6 +32,7 @@ public class ProposalServiceImpl implements ProposalService {
     private static final int DEFAULT_PAGE_SIZE = 10;
 
     private final ProposalRepository proposalRepository;
+    private final StateChangeHistoryRepository stateChangeHistoryRepository;
 
     @Override
     public ProposalPageableResult getProposals(ProposalPageableRequest request) {
@@ -41,32 +46,52 @@ public class ProposalServiceImpl implements ProposalService {
     }
 
     @Override
+    @Transactional
     public ProposalDTO createProposal(ProposalDTO newProposal) {
         if (isRequestInvalid(newProposal)) {
             String message = "Wrong request for proposal creation";
             log.warn(message + " " + newProposal);
             throw new ProposalRequestException(message);
         }
-        return ProposalMapper.toDto(proposalRepository.save(ProposalMapper.toEntity(newProposal)));
+
+        ProposalEntity savedProposal = proposalRepository.save(ProposalMapper.toEntity(newProposal));
+        stateChangeHistoryRepository.save(createStateChange(savedProposal));
+        return ProposalMapper.toDto(savedProposal);
     }
 
     @Override
+    @Transactional
     public ProposalDTO updateProposal(ProposalDTO proposalToUpdate) {
-        if (isUpdateInvalid(proposalToUpdate)) {
+        Optional<ProposalEntity> currentProposal = proposalRepository.findById(proposalToUpdate.getId());
+        if (currentProposal.isEmpty() || isUpdateInvalid(proposalToUpdate, currentProposal.get())) {
             String message = "Wrong request for proposal update";
             log.warn(message + " " + proposalToUpdate);
             throw new ProposalRequestException(message);
         }
 
-        return ProposalMapper.toDto(proposalRepository.save(ProposalMapper.toEntity(proposalToUpdate)));
+        ProposalEntity savedProposal = proposalRepository.save(ProposalMapper.toEntity(proposalToUpdate));
+        stateChangeHistoryRepository.save(createStateChange(savedProposal, currentProposal.get().getState()));
+        return ProposalMapper.toDto(savedProposal);
     }
 
-    private boolean isUpdateInvalid(ProposalDTO proposalToUpdate) {
+    private StateChangeHistoryEntity createStateChange(ProposalEntity savedProposal) {
+        return createStateChange(savedProposal, null);
+    }
+
+    private StateChangeHistoryEntity createStateChange(ProposalEntity savedProposal, State previousState) {
+        StateChangeHistoryEntity stateChange = new StateChangeHistoryEntity();
+        stateChange.setPreviousState(previousState);
+        stateChange.setNextState(savedProposal.getState());
+        stateChange.setProposal(savedProposal);
+        stateChange.setDate(ZonedDateTime.now());
+        return stateChange;
+    }
+
+    private boolean isUpdateInvalid(ProposalDTO proposalToUpdate, ProposalEntity currentProposal) {
         if (proposalToUpdate.getId() == null) {
             return true;
         }
-        Optional<ProposalEntity> currentProposal = proposalRepository.findById(proposalToUpdate.getId());
-        return !(currentProposal.isPresent() && isUpdateValid(proposalToUpdate, currentProposal.get()));
+        return !isUpdateValid(proposalToUpdate, currentProposal);
     }
 
     private boolean isUpdateValid(ProposalDTO proposalToUpdate, ProposalEntity currentProposal) {

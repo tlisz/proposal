@@ -1,4 +1,4 @@
-CREATE TABLE Proposals (
+CREATE TABLE proposals (
     id IDENTITY NOT NULL PRIMARY KEY,
     name VARCHAR(50),
     text VARCHAR(255),
@@ -6,7 +6,8 @@ CREATE TABLE Proposals (
     state VARCHAR(30)
 );
 
-INSERT INTO Proposals(id, name, text, reason, state) VALUES (1, 'proposal1', 'prop1 text', null, 'CREATED'),
+INSERT INTO proposals(id, name, text, reason, state) VALUES
+(1, 'proposal1', 'prop1 text', null, 'CREATED'),
 (2, 'proposal2', 'prop2 text', null, 'CREATED'),
 (3, 'proposal3', 'prop3 text', null, 'CREATED'),
 (4, 'proposal4', 'prop4 text', 'reason', 'DELETED'),

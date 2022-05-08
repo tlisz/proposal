@@ -4,10 +4,8 @@ import com.example.proposal.enums.State;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.Table;
+import javax.persistence.*;
+import java.util.Set;
 
 @Entity
 @Table(name = "proposals")
@@ -20,4 +18,7 @@ public class ProposalEntity extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private State state;
     private String reason;
+
+    @OneToMany(mappedBy="proposal")
+    private Set<StateChangeHistoryEntity> history;
 }

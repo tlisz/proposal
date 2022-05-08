@@ -13,6 +13,7 @@ public class ProposalMapper {
         if (proposalToMap == null) {
             return null;
         }
+
         ProposalDTO mappedProposal = new ProposalDTO();
         mappedProposal.setId(proposalToMap.getId());
         mappedProposal.setReason(proposalToMap.getReason());
@@ -26,6 +27,7 @@ public class ProposalMapper {
         if (proposalToMap == null) {
             return null;
         }
+
         ProposalEntity mappedProposal = new ProposalEntity();
         mappedProposal.setId(proposalToMap.getId());
         mappedProposal.setReason(proposalToMap.getReason());
