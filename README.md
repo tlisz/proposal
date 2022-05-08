@@ -5,7 +5,7 @@ run command:  mvn spring-boot:run
 ENDPOINTS:
 - proposal/sorted POST - get sorted proposals
 - proposal POST - create proposal
-- proposal PUT - update proposal
+- proposal/{proposalId} PUT - update proposal
 - {proposalId}/history GET - get history for proposal
 
 ASSUMPTIONS:

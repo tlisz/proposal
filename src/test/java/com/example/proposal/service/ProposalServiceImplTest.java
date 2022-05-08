@@ -7,7 +7,9 @@ import com.example.proposal.enums.ProposalSortColumn;
 import com.example.proposal.enums.State;
 import com.example.proposal.exception.ProposalRequestException;
 import com.example.proposal.model.ProposalEntity;
+import com.example.proposal.model.StateChangeHistoryEntity;
 import com.example.proposal.repository.ProposalRepository;
+import com.example.proposal.repository.StateChangeHistoryRepository;
 import com.example.proposal.service.impl.ProposalServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -36,6 +38,9 @@ public class ProposalServiceImplTest {
 
     @Mock
     ProposalRepository proposalRepository;
+
+    @Mock
+    StateChangeHistoryRepository stateChangeHistoryRepository;
 
     @Captor
     ArgumentCaptor<PageRequest> pageRequestCaptor;
@@ -115,6 +120,7 @@ public class ProposalServiceImplTest {
         proposal.setReason(newProposal.getReason());
         proposal.setName(newProposal.getName());
         Mockito.when(proposalRepository.save(any())).thenReturn(proposal);
+        Mockito.when(stateChangeHistoryRepository.save(any(StateChangeHistoryEntity.class))).thenReturn(null);
 
         // when
         ProposalDTO createdProposal = proposalService.createProposal(newProposal);
@@ -127,6 +133,7 @@ public class ProposalServiceImplTest {
         assertThat(createdProposal.getText()).isEqualTo(newProposal.getText());
         assertThat(createdProposal.getId()).isEqualTo(expectedId);
         verify(proposalRepository, times(1)).save(any(ProposalEntity.class));
+        verify(stateChangeHistoryRepository, times(1)).save(any(StateChangeHistoryEntity.class));
     }
 
     @Test
@@ -144,6 +151,7 @@ public class ProposalServiceImplTest {
 
         // then
         verify(proposalRepository, never()).save(any(ProposalEntity.class));
+        verify(stateChangeHistoryRepository, never()).save(any(StateChangeHistoryEntity.class));
     }
 
     @Test
@@ -161,6 +169,7 @@ public class ProposalServiceImplTest {
 
         // then
         verify(proposalRepository, never()).save(any(ProposalEntity.class));
+        verify(stateChangeHistoryRepository, never()).save(any(StateChangeHistoryEntity.class));
     }
 
     @Test
@@ -177,6 +186,7 @@ public class ProposalServiceImplTest {
 
         // then
         verify(proposalRepository, never()).save(any(ProposalEntity.class));
+        verify(stateChangeHistoryRepository, never()).save(any(StateChangeHistoryEntity.class));
     }
 
     @Test
@@ -205,6 +215,7 @@ public class ProposalServiceImplTest {
         verify(proposalRepository, never()).save(any(ProposalEntity.class));
         verify(proposalRepository, times(1)).findById(longCaptor.capture());
         assertThat(longCaptor.getValue()).isEqualTo(proposalToUpdate.getId());
+        verify(stateChangeHistoryRepository, never()).save(any(StateChangeHistoryEntity.class));
     }
 
     @Test
@@ -223,6 +234,7 @@ public class ProposalServiceImplTest {
         // then
         verify(proposalRepository, never()).save(any(ProposalEntity.class));
         verify(proposalRepository, never()).findById(anyLong());
+        verify(stateChangeHistoryRepository, never()).save(any(StateChangeHistoryEntity.class));
     }
 
     @Test
@@ -250,6 +262,7 @@ public class ProposalServiceImplTest {
 
         Mockito.when(proposalRepository.findById(anyLong())).thenReturn(Optional.of(proposalBeforeUpdate));
         Mockito.when(proposalRepository.save(any(ProposalEntity.class))).thenReturn(savedProposal);
+        Mockito.when(stateChangeHistoryRepository.save(any(StateChangeHistoryEntity.class))).thenReturn(null);
 
         // when
         ProposalDTO updatedProposal = proposalService.updateProposal(proposalToUpdate);
@@ -264,6 +277,7 @@ public class ProposalServiceImplTest {
         verify(proposalRepository, times(1)).save(any(ProposalEntity.class));
         verify(proposalRepository, times(1)).findById(longCaptor.capture());
         assertThat(longCaptor.getValue()).isEqualTo(proposalToUpdate.getId());
+        verify(stateChangeHistoryRepository, times(1)).save(any(StateChangeHistoryEntity.class));
     }
 
     private Page<ProposalEntity> createQueryResult(List<ProposalEntity> proposals) {
