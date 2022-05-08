@@ -13,3 +13,4 @@ ASSUMPTIONS:
 - sorting is asc always
 - no authentication or authorization
 - dummy data can be inserted on app startup
+- change state history stores previous and next state and date of change
