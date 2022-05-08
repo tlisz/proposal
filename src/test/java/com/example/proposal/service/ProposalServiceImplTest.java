@@ -20,6 +20,7 @@ import org.springframework.data.domain.Sort;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Function;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -38,6 +39,9 @@ public class ProposalServiceImplTest {
 
     @Captor
     ArgumentCaptor<PageRequest> pageRequestCaptor;
+
+    @Captor
+    ArgumentCaptor<Long> longCaptor;
 
     @Test
     public void shouldReturnProposals() {
@@ -98,7 +102,7 @@ public class ProposalServiceImplTest {
 
     @Test
     public void shouldCreateNewProposal() {
-        // giver
+        // given
         ProposalDTO newProposal = new ProposalDTO();
         newProposal.setName("name");
         newProposal.setState(State.CREATED);
@@ -127,7 +131,7 @@ public class ProposalServiceImplTest {
 
     @Test
     public void shouldThrowExceptionWhenIdIsNotNull() {
-        // giver
+        // given
         ProposalDTO newProposal = new ProposalDTO();
         newProposal.setId(2L);
         newProposal.setName("name");
@@ -144,7 +148,7 @@ public class ProposalServiceImplTest {
 
     @Test
     public void shouldThrowExceptionWhenReasonIsNotNull() {
-        // giver
+        // given
         ProposalDTO newProposal = new ProposalDTO();
         newProposal.setName("name");
         newProposal.setState(State.CREATED);
@@ -161,7 +165,7 @@ public class ProposalServiceImplTest {
 
     @Test
     public void shouldThrowExceptionWhenStateIsNotCreated() {
-        // giver
+        // given
         ProposalDTO newProposal = new ProposalDTO();
         newProposal.setName("name");
         newProposal.setState(State.ACCEPTED);
@@ -173,6 +177,93 @@ public class ProposalServiceImplTest {
 
         // then
         verify(proposalRepository, never()).save(any(ProposalEntity.class));
+    }
+
+    @Test
+    public void shouldThrowExceptionWhenUpdatingFromAcceptedToVerified() {
+        // given
+        ProposalDTO proposalToUpdate = new ProposalDTO();
+        proposalToUpdate.setId(2L);
+        proposalToUpdate.setName("name");
+        proposalToUpdate.setState(State.VERIFIED);
+        proposalToUpdate.setText("text");
+
+        ProposalEntity proposalBeforeUpdate = new ProposalEntity();
+        proposalBeforeUpdate.setId(proposalToUpdate.getId());
+        proposalBeforeUpdate.setState(State.ACCEPTED);
+        proposalBeforeUpdate.setText(proposalToUpdate.getText());
+        proposalBeforeUpdate.setReason(proposalToUpdate.getReason());
+        proposalBeforeUpdate.setName(proposalToUpdate.getName());
+
+        Mockito.when(proposalRepository.findById(anyLong())).thenReturn(Optional.of(proposalBeforeUpdate));
+
+        // when
+        assertThatThrownBy(() -> proposalService.updateProposal(proposalToUpdate))
+                .isInstanceOf(ProposalRequestException.class);
+
+        // then
+        verify(proposalRepository, never()).save(any(ProposalEntity.class));
+        verify(proposalRepository, times(1)).findById(longCaptor.capture());
+        assertThat(longCaptor.getValue()).isEqualTo(proposalToUpdate.getId());
+    }
+
+    @Test
+    public void shouldThrowExceptionWhenIdIsNull() {
+        // given
+        ProposalDTO proposalToUpdate = new ProposalDTO();
+        proposalToUpdate.setId(null);
+        proposalToUpdate.setName("name");
+        proposalToUpdate.setState(State.VERIFIED);
+        proposalToUpdate.setText("text");
+
+        // when
+        assertThatThrownBy(() -> proposalService.updateProposal(proposalToUpdate))
+                .isInstanceOf(ProposalRequestException.class);
+
+        // then
+        verify(proposalRepository, never()).save(any(ProposalEntity.class));
+        verify(proposalRepository, never()).findById(anyLong());
+    }
+
+    @Test
+    public void shouldUpdateProposal() {
+        // given
+        ProposalDTO proposalToUpdate = new ProposalDTO();
+        proposalToUpdate.setId(2L);
+        proposalToUpdate.setName("name");
+        proposalToUpdate.setState(State.ACCEPTED);
+        proposalToUpdate.setText("text");
+
+        ProposalEntity proposalBeforeUpdate = new ProposalEntity();
+        proposalBeforeUpdate.setId(proposalToUpdate.getId());
+        proposalBeforeUpdate.setState(State.VERIFIED);
+        proposalBeforeUpdate.setText(proposalToUpdate.getText());
+        proposalBeforeUpdate.setReason(proposalToUpdate.getReason());
+        proposalBeforeUpdate.setName(proposalToUpdate.getName());
+
+        ProposalEntity savedProposal = new ProposalEntity();
+        savedProposal.setId(proposalToUpdate.getId());
+        savedProposal.setState(proposalToUpdate.getState());
+        savedProposal.setText(proposalToUpdate.getText());
+        savedProposal.setReason(proposalToUpdate.getReason());
+        savedProposal.setName(proposalToUpdate.getName());
+
+        Mockito.when(proposalRepository.findById(anyLong())).thenReturn(Optional.of(proposalBeforeUpdate));
+        Mockito.when(proposalRepository.save(any(ProposalEntity.class))).thenReturn(savedProposal);
+
+        // when
+        ProposalDTO updatedProposal = proposalService.updateProposal(proposalToUpdate);
+
+        // then
+        assertThat(updatedProposal).isNotNull();
+        assertThat(updatedProposal.getState()).isEqualTo(proposalToUpdate.getState());
+        assertThat(updatedProposal.getReason()).isEqualTo(proposalToUpdate.getReason());
+        assertThat(updatedProposal.getName()).isEqualTo(proposalToUpdate.getName());
+        assertThat(updatedProposal.getText()).isEqualTo(proposalToUpdate.getText());
+        assertThat(updatedProposal.getId()).isEqualTo(savedProposal.getId());
+        verify(proposalRepository, times(1)).save(any(ProposalEntity.class));
+        verify(proposalRepository, times(1)).findById(longCaptor.capture());
+        assertThat(longCaptor.getValue()).isEqualTo(proposalToUpdate.getId());
     }
 
     private Page<ProposalEntity> createQueryResult(List<ProposalEntity> proposals) {

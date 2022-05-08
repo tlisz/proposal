@@ -52,21 +52,21 @@ public class ProposalServiceImpl implements ProposalService {
 
     @Override
     public ProposalDTO updateProposal(ProposalDTO proposalToUpdate) {
-        if (isUpdateValid(proposalToUpdate)) {
+        if (isUpdateInvalid(proposalToUpdate)) {
             String message = "Wrong request for proposal update";
             log.warn(message + " " + proposalToUpdate);
             throw new ProposalRequestException(message);
         }
-        //
-        return null;
+
+        return ProposalMapper.toDto(proposalRepository.save(ProposalMapper.toEntity(proposalToUpdate)));
     }
 
-    private boolean isUpdateValid(ProposalDTO proposalToUpdate) {
+    private boolean isUpdateInvalid(ProposalDTO proposalToUpdate) {
         if (proposalToUpdate.getId() == null) {
-            return false;
+            return true;
         }
         Optional<ProposalEntity> currentProposal = proposalRepository.findById(proposalToUpdate.getId());
-        return currentProposal.isPresent() && isUpdateValid(proposalToUpdate, currentProposal.get());
+        return !(currentProposal.isPresent() && isUpdateValid(proposalToUpdate, currentProposal.get()));
     }
 
     private boolean isUpdateValid(ProposalDTO proposalToUpdate, ProposalEntity currentProposal) {
